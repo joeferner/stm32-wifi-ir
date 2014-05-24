@@ -1,6 +1,6 @@
 # GCC toolchain prefix
 IF(NOT TOOLCHAIN_PREFIX)
-     SET(TOOLCHAIN_PREFIX "/opt/gcc-arm-none-eabi-4_8-2014q1")
+     SET(TOOLCHAIN_PREFIX "/opt/gcc-arm-none-eabi")
      MESSAGE(STATUS "No TOOLCHAIN_PREFIX specified, using default: " ${TOOLCHAIN_PREFIX})
 ENDIF()
 
