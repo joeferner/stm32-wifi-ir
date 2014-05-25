@@ -14,4 +14,8 @@
 #define DEBUG_USART_RX         GPIOA
 #define DEBUG_USART_RX_PIN     GPIO_Pin_10
 
+#define IR_RX_RCC              RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO
+#define IR_RX_PORT             GPIOA
+#define IR_RX_PIN              GPIO_Pin_0
+
 #endif // PLATFORM_CONFIG_H_INCLUDED

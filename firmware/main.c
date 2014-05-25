@@ -10,6 +10,7 @@
 #include "time.h"
 #include "platform_config.h"
 #include "ring_buffer.h"
+#include "ir_rx.h"
 
 void setup();
 void loop();
@@ -38,6 +39,7 @@ void setup() {
   ring_buffer_u8_init(&g_usartInputRingBuffer, g_usartInputBuffer, INPUT_BUFFER_SIZE);
 
   time_setup();
+  ir_rx_setup();
 
   debug_led_set(0);
 

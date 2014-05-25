@@ -10,7 +10,7 @@ ENDIF()
 
 SET(CMSIS_FIND_LIBS "cmsis_ld")
 SET(CMSIS_STARTUP_SOURCE "${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/CMSIS/Device/ST/STM32F10x/Source/Templates/gcc_ride7/startup_stm32f10x_ld.s")
-SET(STM32_CHIP_DEF "STM32F10X_LD")
+SET(STM32_CHIP_DEF "STM32F10X_MD")
 SET(STACK_ADDRESS "0x20005000")
 SET(FLASH_SIZE "128K")
 SET(RAM_SIZE "20K")
@@ -41,8 +41,11 @@ INCLUDE_DIRECTORIES(
 SET(PROJECT_SOURCES
   ${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_gpio.c
   ${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_rcc.c
-  ${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/STM32F10x_StdPeriph_Driver/src/misc.c
   ${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_usart.c
+  ${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dma.c
+  ${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_tim.c
+  ${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_exti.c
+  ${STM32_USB_FS_DEVICE_LIB_DIR}/Libraries/STM32F10x_StdPeriph_Driver/src/misc.c
   system_stm32f10x.c
   main.c
   interrupts.c
@@ -50,6 +53,7 @@ SET(PROJECT_SOURCES
   delay.c
   time.c
   ring_buffer.c
+  ir_rx.c
 )
 
 ADD_EXECUTABLE(${CMAKE_PROJECT_NAME}.elf ${PROJECT_SOURCES} ${CMSIS_STARTUP_SOURCE})
