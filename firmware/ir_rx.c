@@ -7,16 +7,18 @@
 #include "ir_rx.h"
 #include "debug.h"
 #include "platform_config.h"
+#include "ir_code.h"
 
 void on_exti1_irq();
 void on_tim2_irq();
 
 #define IR_RX_CAPTURE_BUFFER_LEN 200
 uint16_t irRxCaptureBuffer[IR_RX_CAPTURE_BUFFER_LEN];
-volatile uint16_t irRxCaptureBufferIndex;
+volatile int16_t irRxCaptureBufferIndex;
 
-#define TIM_PRESCALER  100
+#define TIM_PRESCALER  72
 #define TIM_PERIOD     0xfffe
+#define US_PER_TIM     ((1.0 / (SystemCoreClock / TIM_PRESCALER)) * 1000000.0)
 
 void ir_rx_setup() {
   GPIO_InitTypeDef gpioConfig;
@@ -26,7 +28,7 @@ void ir_rx_setup() {
 
   debug_write_line("?BEGIN ir_rx_setup");
 
-  irRxCaptureBufferIndex = 0;
+  irRxCaptureBufferIndex = -1;
 
   RCC_APB2PeriphClockCmd(IR_RX_RCC, ENABLE);
   gpioConfig.GPIO_Pin = IR_RX_PIN;
@@ -56,6 +58,9 @@ void ir_rx_setup() {
   debug_write("?ir_rx timer period: ");
   debug_write_u32(TIM_PERIOD, 10);
   debug_write_line("");
+  debug_write("?ir_rx timer us: ");
+  debug_write_u32(US_PER_TIM, 10);
+  debug_write_line("");
 
   TIM_TimeBaseStructInit(&timeBaseInit);
   timeBaseInit.TIM_Period = TIM_PERIOD;
@@ -79,8 +84,14 @@ void ir_rx_setup() {
 
 void on_exti0_irq() {
   if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
-    irRxCaptureBuffer[irRxCaptureBufferIndex++] = TIM_GetCounter(TIM2);
-    debug_led_set(1);
+    // skip the first signal change, this is the start of the signal and should not be recorded
+    if(irRxCaptureBufferIndex < 0) {
+      irRxCaptureBufferIndex++;
+    } else {
+      irRxCaptureBuffer[irRxCaptureBufferIndex++] = TIM_GetCounter(TIM2);
+      debug_led_set(1);
+    }
+
     TIM_SetCounter(TIM2, 0);
     EXTI_ClearITPendingBit(EXTI_Line0);
   }
@@ -89,14 +100,10 @@ void on_exti0_irq() {
 void on_tim2_irq() {
   if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
     debug_led_set(0);
-    if(irRxCaptureBufferIndex > 0) {
-      debug_write_line("signal");
-      for(int i = 0; i < irRxCaptureBufferIndex; i++) {
-        debug_write_u16(irRxCaptureBuffer[i], 10);
-        debug_write_line("");
-      }
-      irRxCaptureBufferIndex = 0;
+    if(irRxCaptureBufferIndex > 3) {
+      ir_code_decode(irRxCaptureBuffer, irRxCaptureBufferIndex);
     }
+    irRxCaptureBufferIndex = -1;
     TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
   }
 }

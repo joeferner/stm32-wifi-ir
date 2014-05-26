@@ -38,6 +38,7 @@ void setup() {
 
   ring_buffer_u8_init(&g_usartInputRingBuffer, g_usartInputBuffer, INPUT_BUFFER_SIZE);
 
+  ir_code_setup();
   time_setup();
   ir_rx_setup();
 
