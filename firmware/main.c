@@ -48,6 +48,13 @@ void setup() {
 }
 
 void loop() {
+  IrCode* code = ir_rx_recv();
+  if(code != NULL) {
+    debug_write("?code: ");
+    debug_write_u16(code->brand, 16);
+    debug_write_u16(code->key, 16);
+    debug_write_line("");
+  }
 }
 
 void assert_failed(uint8_t* file, uint32_t line) {

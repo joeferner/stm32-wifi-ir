@@ -4,10 +4,11 @@
 #include "debug.h"
 #include "ir_code.h"
 
-#define DEBUG_DECODE
+//#define DEBUG_DECODE
 
-#define NO_MATCH        -1
-#define MATCH_THRESHOLD 500
+#define NO_MATCH         -1
+#define MATCH_THRESHOLD  500
+#define MIN_SIGNAL_COUNT 5
 
 int _ir_code_match(IrCode* code, uint16_t* buffer, uint16_t bufferLen);
 
@@ -45,6 +46,10 @@ void ir_code_setup() {
 }
 
 IrCode* ir_code_decode(uint16_t* buffer, uint16_t bufferLen) {
+  if(bufferLen < MIN_SIGNAL_COUNT) {
+    return NULL;
+  }
+
   #ifdef DEBUG_DECODE
     debug_write("?signal: ");
     for(int i = 0; i < bufferLen; i++) {

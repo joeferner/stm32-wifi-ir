@@ -4,6 +4,8 @@
 #include <stm32f10x_tim.h>
 #include <stm32f10x_exti.h>
 #include <misc.h>
+#include <stdint.h>
+#include <stddef.h>
 #include "ir_rx.h"
 #include "debug.h"
 #include "platform_config.h"
@@ -11,10 +13,15 @@
 
 void on_exti1_irq();
 void on_tim2_irq();
+void _ir_rx_process_buffer();
 
 #define IR_RX_CAPTURE_BUFFER_LEN 200
 uint16_t irRxCaptureBuffer[IR_RX_CAPTURE_BUFFER_LEN];
 volatile int16_t irRxCaptureBufferIndex;
+
+#define RX_BUFFER_SIZE 20
+ring_buffer_voidptr irRxRecvRingBuffer;
+void* irRxRecvBuffer[RX_BUFFER_SIZE];
 
 #define TIM_PRESCALER  72
 #define TIM_PERIOD     0xfffe
@@ -27,6 +34,8 @@ void ir_rx_setup() {
   TIM_TimeBaseInitTypeDef timeBaseInit;
 
   debug_write_line("?BEGIN ir_rx_setup");
+
+  ring_buffer_voidptr_init(&irRxRecvRingBuffer, irRxRecvBuffer, RX_BUFFER_SIZE);
 
   irRxCaptureBufferIndex = -1;
 
@@ -82,13 +91,31 @@ void ir_rx_setup() {
   debug_write_line("?END ir_rx_setup");
 }
 
+IrCode* ir_rx_recv() {
+  return (IrCode*)ring_buffer_voidptr_read(&irRxRecvRingBuffer);
+}
+
+void _ir_rx_process_buffer() {
+  IrCode* code = ir_code_decode(irRxCaptureBuffer, irRxCaptureBufferIndex);
+  if(code != NULL) {
+    ring_buffer_voidptr_write(&irRxRecvRingBuffer, code);
+  }
+}
+
 void on_exti0_irq() {
   if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
     // skip the first signal change, this is the start of the signal and should not be recorded
     if(irRxCaptureBufferIndex < 0) {
       irRxCaptureBufferIndex++;
     } else {
-      irRxCaptureBuffer[irRxCaptureBufferIndex++] = TIM_GetCounter(TIM2);
+      irRxCaptureBuffer[irRxCaptureBufferIndex] = TIM_GetCounter(TIM2);
+      if(irRxCaptureBuffer[irRxCaptureBufferIndex] > 10000) {
+        irRxCaptureBufferIndex++;
+        _ir_rx_process_buffer();
+        irRxCaptureBufferIndex = 0;
+      } else {
+        irRxCaptureBufferIndex++;
+      }
       debug_led_set(1);
     }
 
@@ -100,8 +127,8 @@ void on_exti0_irq() {
 void on_tim2_irq() {
   if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
     debug_led_set(0);
-    if(irRxCaptureBufferIndex > 3) {
-      ir_code_decode(irRxCaptureBuffer, irRxCaptureBufferIndex);
+    if(irRxCaptureBufferIndex > 1) {
+      _ir_rx_process_buffer();
     }
     irRxCaptureBufferIndex = -1;
     TIM_ClearITPendingBit(TIM2, TIM_IT_Update);

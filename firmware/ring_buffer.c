@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "ring_buffer.h"
 
 #ifndef min
@@ -89,9 +90,52 @@ uint8_t ring_buffer_u8_peekn(ring_buffer_u8* ring, uint16_t i) {
     return 0;
   }
 
-  uint8_t* p = ring->read + i;
+  uint8_t* read = (uint8_t*)ring->read;
+  uint8_t* p = read + i;
   if (p >= ring->end) {
     p -= ring->size;
   }
   return *p;
+}
+
+void ring_buffer_voidptr_init(ring_buffer_voidptr* ring, void** storage, uint16_t size) {
+  ring->storage = storage;
+  ring->size = size;
+  ring->end = ring->storage + ring->size;
+  ring->read = (volatile void**)ring->storage;
+  ring->write = (volatile void**)ring->storage;
+  ring->available = 0;
+}
+
+uint16_t ring_buffer_voidptr_available(ring_buffer_voidptr* ring) {
+  return ring->available;
+}
+
+uint16_t ring_buffer_voidptr_free(ring_buffer_voidptr* ring) {
+  return ring->size - ring->available;
+}
+
+void* ring_buffer_voidptr_read(ring_buffer_voidptr* ring) {
+  if (ring->available == 0) {
+    return NULL;
+  }
+  void* ret = (void*)*ring->read++;
+  ring->available--;
+  if (ring->read >= (volatile void**)ring->end) {
+    ring->read = (volatile void**)ring->storage;
+  }
+  return ret;
+}
+
+void ring_buffer_voidptr_write(ring_buffer_voidptr* ring, void* ptr) {
+  if (ring->available >= ring->size) {
+    ring_buffer_voidptr_read(ring);
+  }
+
+  *ring->write = ptr;
+  ring->write++;
+  ring->available++;
+  if (ring->write >= (volatile void**)ring->end) {
+    ring->write = (volatile void**)ring->storage;
+  }
 }
