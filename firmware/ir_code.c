@@ -4,6 +4,11 @@
 #include "debug.h"
 #include "ir_code.h"
 
+#define DEBUG_DECODE
+
+#define NO_MATCH        -1
+#define MATCH_THRESHOLD 500
+
 int _ir_code_match(IrCode* code, uint16_t* buffer, uint16_t bufferLen);
 
 IrCode codes[20];
@@ -39,28 +44,39 @@ void ir_code_setup() {
   }
 }
 
-void ir_code_decode(uint16_t* buffer, uint16_t bufferLen) {
-  debug_write("signal: ");
-  for(int i = 0; i < bufferLen; i++) {
-    debug_write_u16(buffer[i], 10);
-    debug_write(", ");
-  }
-  debug_write_line("");
+IrCode* ir_code_decode(uint16_t* buffer, uint16_t bufferLen) {
+  #ifdef DEBUG_DECODE
+    debug_write("?signal: ");
+    for(int i = 0; i < bufferLen; i++) {
+      debug_write_u16(buffer[i], 10);
+      debug_write(", ");
+    }
+    debug_write_line("");
+  #endif
 
   int bestMatch = -1;
   int bestValue = 0;
   for(int i=0; i<10; i++) {
     int matchValue = _ir_code_match(&codes[i], buffer, bufferLen);
-    if(matchValue > bestValue) {
+    if(matchValue != NO_MATCH && matchValue > bestValue) {
       bestMatch = i;
       bestValue = matchValue;
     }
   }
+  #ifdef DEBUG_DECODE
+    if(bestMatch >= 0) {
+      debug_write("?match: ");
+      debug_write_u16(codes[bestMatch].brand, 16);
+      debug_write_u16(codes[bestMatch].key, 16);
+      debug_write_line("");
+    } else {
+      debug_write_line("?no match");
+    }
+  #endif
   if(bestMatch >= 0) {
-    debug_write("match: ");
-    debug_write_u16(codes[bestMatch].brand, 16);
-    debug_write_u16(codes[bestMatch].key, 16);
-    debug_write_line("");
+    return &codes[bestMatch];
+  } else {
+    return NULL;
   }
 }
 
@@ -69,12 +85,17 @@ int _ir_code_match(IrCode* code, uint16_t* buffer, uint16_t bufferLen) {
   uint32_t diff = 0;
   for(int i=0; i<minLen; i++) {
     diff += abs((int)buffer[i] - (int)code->code[i]);
+    if(diff > MATCH_THRESHOLD) {
+      return NO_MATCH;
+    }
   }
-  debug_write("diff: ");
-  debug_write_u16(code->brand, 16);
-  debug_write_u16(code->key, 16);
-  debug_write(" ");
-  debug_write_u16(0xffff - diff, 10);
-  debug_write_line("");
+  #ifdef DEBUG_DECODE
+    debug_write("?diff: ");
+    debug_write_u16(code->brand, 16);
+    debug_write_u16(code->key, 16);
+    debug_write(" ");
+    debug_write_u16(diff, 10);
+    debug_write_line("");
+  #endif
   return 0xffff - diff;
 }

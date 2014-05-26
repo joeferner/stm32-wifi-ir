@@ -12,6 +12,6 @@ typedef struct {
 } IrCode;
 
 void ir_code_setup();
-void ir_code_decode(uint16_t* buffer, uint16_t bufferLen);
+IrCode* ir_code_decode(uint16_t* buffer, uint16_t bufferLen);
 
 #endif // IR_CODE_H
