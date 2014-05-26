@@ -11,6 +11,7 @@
 #include "platform_config.h"
 #include "ring_buffer.h"
 #include "ir_rx.h"
+#include "ir_code.h"
 
 void setup();
 void loop();
@@ -48,11 +49,19 @@ void setup() {
 }
 
 void loop() {
-  IrCode* code = ir_rx_recv();
-  if(code != NULL) {
-    debug_write("?code: ");
-    debug_write_u16(code->brand, 16);
-    debug_write_u16(code->key, 16);
+  IrRecv* irRecv = ir_rx_recv();
+  if(irRecv != NULL) {
+    IrCode* code = ir_code_decode(irRecv->buffer, irRecv->bufferLength);
+    debug_write("?rx: ");
+    if(code != NULL) {
+      debug_write_u16(code->brand, 16);
+      debug_write_u16(code->key, 16);
+    } else {
+      for(int i = 0; i < irRecv->bufferLength; i++) {
+        debug_write_u16(irRecv->buffer[i], 10);
+        debug_write(",");
+      }
+    }
     debug_write_line("");
   }
 }

@@ -9,19 +9,17 @@
 #include "ir_rx.h"
 #include "debug.h"
 #include "platform_config.h"
-#include "ir_code.h"
 
 void on_exti1_irq();
 void on_tim2_irq();
 void _ir_rx_process_buffer();
 
-#define IR_RX_CAPTURE_BUFFER_LEN 200
-uint16_t irRxCaptureBuffer[IR_RX_CAPTURE_BUFFER_LEN];
-volatile int16_t irRxCaptureBufferIndex;
+#define IR_RX_COUNT 10
 
-#define RX_BUFFER_SIZE 20
-ring_buffer_voidptr irRxRecvRingBuffer;
-void* irRxRecvBuffer[RX_BUFFER_SIZE];
+IrRecv irRecvs[IR_RX_COUNT];
+volatile uint16_t irRecvReadIndex;
+volatile uint16_t irRecvWriteIndex;
+volatile uint16_t irRecvAvailable;
 
 #define TIM_PRESCALER  72
 #define TIM_PERIOD     0xfffe
@@ -35,9 +33,10 @@ void ir_rx_setup() {
 
   debug_write_line("?BEGIN ir_rx_setup");
 
-  ring_buffer_voidptr_init(&irRxRecvRingBuffer, irRxRecvBuffer, RX_BUFFER_SIZE);
-
-  irRxCaptureBufferIndex = -1;
+  irRecvAvailable = 0;
+  irRecvReadIndex = 0;
+  irRecvWriteIndex = 0;
+  irRecvs[irRecvWriteIndex].bufferLength = -1;
 
   RCC_APB2PeriphClockCmd(IR_RX_RCC, ENABLE);
   gpioConfig.GPIO_Pin = IR_RX_PIN;
@@ -91,30 +90,37 @@ void ir_rx_setup() {
   debug_write_line("?END ir_rx_setup");
 }
 
-IrCode* ir_rx_recv() {
-  return (IrCode*)ring_buffer_voidptr_read(&irRxRecvRingBuffer);
+IrRecv* ir_rx_recv() {
+  if(irRecvAvailable == 0) {
+    return NULL;
+  }
+  IrRecv* result = &irRecvs[irRecvReadIndex];
+  irRecvAvailable--;
+  irRecvReadIndex = (irRecvReadIndex + 1) % IR_RX_COUNT;
+  return result;
 }
 
 void _ir_rx_process_buffer() {
-  IrCode* code = ir_code_decode(irRxCaptureBuffer, irRxCaptureBufferIndex);
-  if(code != NULL) {
-    ring_buffer_voidptr_write(&irRxRecvRingBuffer, code);
-  }
+  irRecvWriteIndex = (irRecvWriteIndex + 1) % IR_RX_COUNT;
+  irRecvAvailable++;
+  irRecvs[irRecvWriteIndex].bufferLength = -1;
 }
 
 void on_exti0_irq() {
   if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
+    IrRecv* rx = &irRecvs[irRecvWriteIndex];
+
     // skip the first signal change, this is the start of the signal and should not be recorded
-    if(irRxCaptureBufferIndex < 0) {
-      irRxCaptureBufferIndex++;
+    if(rx->bufferLength < 0) {
+      rx->bufferLength++;
     } else {
-      irRxCaptureBuffer[irRxCaptureBufferIndex] = TIM_GetCounter(TIM2);
-      if(irRxCaptureBuffer[irRxCaptureBufferIndex] > 10000) {
-        irRxCaptureBufferIndex++;
+      rx->buffer[rx->bufferLength] = TIM_GetCounter(TIM2);
+      if(rx->buffer[rx->bufferLength] > 10000 || rx->bufferLength == (IR_RX_CAPTURE_BUFFER_MAX_LEN - 1)) {
+        rx->bufferLength++;
         _ir_rx_process_buffer();
-        irRxCaptureBufferIndex = 0;
+        irRecvs[irRecvWriteIndex].bufferLength = 0;
       } else {
-        irRxCaptureBufferIndex++;
+        rx->bufferLength++;
       }
       debug_led_set(1);
     }
@@ -127,10 +133,10 @@ void on_exti0_irq() {
 void on_tim2_irq() {
   if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
     debug_led_set(0);
-    if(irRxCaptureBufferIndex > 1) {
+    if(irRecvs[irRecvWriteIndex].bufferLength > 1) {
       _ir_rx_process_buffer();
     }
-    irRxCaptureBufferIndex = -1;
+    irRecvs[irRecvWriteIndex].bufferLength = -1;
     TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
   }
 }
