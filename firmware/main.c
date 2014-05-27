@@ -10,6 +10,7 @@
 #include "time.h"
 #include "platform_config.h"
 #include "ring_buffer.h"
+#include "ir_tx.h"
 #include "ir_rx.h"
 #include "ir_code.h"
 
@@ -41,6 +42,7 @@ void setup() {
 
   ir_code_setup();
   time_setup();
+  ir_tx_setup();
   ir_rx_setup();
 
   debug_led_set(0);
@@ -78,6 +80,8 @@ void assert_failed(uint8_t* file, uint32_t line) {
   }
 }
 
+uint16_t testcode0[] = { 2440, 516, 1232, 541, 616, 541, 615, 542, 1231, 542, 615, 542, 614, 543, 614, 542, 1230, 543, 615, 542, 613, 543, 614, 543, 614 };
+
 void on_usart1_irq() {
   char line[MAX_LINE_LENGTH];
 
@@ -99,6 +103,9 @@ void on_usart1_irq() {
         debug_write_line("!code.set minWidth,150");
         debug_write_line("!code.set title,'Code'");
         debug_write_line("!code.set text,'xxxxxxxxxxxxxxxxxxxx'");
+      } else if(strncmp(line, "!TX", 3) == 0) {
+        debug_write_line("+OK");
+        ir_tx_send(testcode0, 25);
       } else {
         debug_write("?Unknown command: ");
         debug_write_line(line);

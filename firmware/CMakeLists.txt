@@ -53,6 +53,7 @@ SET(PROJECT_SOURCES
   delay.c
   time.c
   ring_buffer.c
+  ir_tx.c
   ir_rx.c
   ir_code.c
 )
