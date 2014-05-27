@@ -18,13 +18,17 @@
 #define IR_RX_PORT             GPIOA
 #define IR_RX_PIN              GPIO_Pin_0
 
-#define IR_TX_TIMER            TIM3
-#define IR_TX_TIMER_RCC        RCC_APB1Periph_TIM3
-#define IR_TX_TIMER_CH_Init          TIM_OC1Init
-#define IR_TX_TIMER_CH_PreloadConfig TIM_OC1PreloadConfig
-#define IR_TX_TIMER_CH_SetCompare    TIM_SetCompare1
+#define IR_TX_CARRIER_TIMER            TIM3
+#define IR_TX_CARRIER_TIMER_RCC        RCC_APB1Periph_TIM3
+#define IR_TX_CARRIER_TIMER_CH_Init          TIM_OC1Init
+#define IR_TX_CARRIER_TIMER_CH_PreloadConfig TIM_OC1PreloadConfig
+#define IR_TX_CARRIER_TIMER_CH_SetCompare    TIM_SetCompare1
+#define IR_TX_CARRIER_RCC              RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO
+#define IR_TX_CARRIER_PORT             GPIOA
+#define IR_TX_CARRIER_PIN              GPIO_Pin_6
+
 #define IR_TX_RCC              RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO
 #define IR_TX_PORT             GPIOA
-#define IR_TX_PIN              GPIO_Pin_6
+#define IR_TX_PIN              GPIO_Pin_5
 
 #endif // PLATFORM_CONFIG_H_INCLUDED

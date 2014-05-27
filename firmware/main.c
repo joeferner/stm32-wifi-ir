@@ -80,7 +80,7 @@ void assert_failed(uint8_t* file, uint32_t line) {
   }
 }
 
-uint16_t testcode0[] = { 2440, 516, 1232, 541, 616, 541, 615, 542, 1231, 542, 615, 542, 614, 543, 614, 542, 1230, 543, 615, 542, 613, 543, 614, 543, 614 };
+uint16_t testcode0[] = { 2388, 541, 1232, 541, 615, 541, 1232, 540, 616, 541, 1232, 541, 616, 541, 615, 541, 1231, 540, 615, 541, 615, 541, 615, 541, 616 };
 
 void on_usart1_irq() {
   char line[MAX_LINE_LENGTH];
@@ -105,6 +105,10 @@ void on_usart1_irq() {
         debug_write_line("!code.set text,'xxxxxxxxxxxxxxxxxxxx'");
       } else if(strncmp(line, "!TX", 3) == 0) {
         debug_write_line("+OK");
+        ir_tx_send(testcode0, 25);
+        delay_us(5000);
+        ir_tx_send(testcode0, 25);
+        delay_us(5000);
         ir_tx_send(testcode0, 25);
       } else {
         debug_write("?Unknown command: ");
