@@ -69,6 +69,9 @@ void loop() {
       debug_write_u16(code->brand, 16);
       debug_write_u16(code->key, 16);
     } else {
+      debug_write("(");
+      debug_write_u16(irRecv->bufferLength, 10);
+      debug_write("): ");
       for(int i = 0; i < irRecv->bufferLength; i++) {
         debug_write_u16(irRecv->buffer[i], 10);
         debug_write(",");
@@ -89,9 +92,6 @@ void assert_failed(uint8_t* file, uint32_t line) {
   while (1) {
   }
 }
-
-//uint16_t testcode0[] = { 2388, 541, 1232, 541, 615, 541, 1232, 540, 616, 541, 1232, 541, 616, 541, 615, 541, 1231, 540, 615, 541, 615, 541, 615, 541, 616 };
-uint16_t testcode0[] = { 9028,4450,555,4433,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,4433,555,4433,555,4433,555,4433,556 };
 
 void on_usart1_irq() {
   char line[MAX_LINE_LENGTH];
@@ -116,8 +116,8 @@ void on_usart1_irq() {
         debug_write_line("!code.set text,'xxxxxxxxxxxxxxxxxxxx'");
       } else if(strncmp(line, "!TX", 3) == 0) {
         debug_write_line("+OK");
-        ir_tx_send(testcode0, 35);
-        delay_ms(160);
+        IrCode* code = ir_code_getByIndex(10);
+        ir_tx_send(code);
       } else {
         debug_write("?Unknown command: ");
         debug_write_line(line);

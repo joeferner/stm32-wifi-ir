@@ -7,7 +7,7 @@
 //#define DEBUG_DECODE
 
 #define NO_MATCH         -1
-#define MATCH_THRESHOLD  500
+#define MATCH_THRESHOLD  1000
 #define MIN_SIGNAL_COUNT 5
 
 int _ir_code_match(IrCode* code, uint16_t* buffer, uint16_t bufferLen);
@@ -35,6 +35,8 @@ void ir_code_setup() {
   for(; i<11; i++) {
     codes[i].brand = BRAND_WESTINGHOUSE;
     codes[i].key = i;
+    codes[i].repeatCount = 4;
+    codes[i].gap = 45000;
     codes[i].codeLength = 25;
     switch(i) {
       case 0: codes[i].code = code0; break;
@@ -54,12 +56,18 @@ void ir_code_setup() {
   for(; i<CODE_COUNT; i++) {
     codes[i].brand = BRAND_MOTOROLA;
     codes[i].key = i - 11;
+    codes[i].repeatCount = 1;
+    codes[i].gap = 100000;
     codes[i].codeLength = 35;
     switch(i) {
       case 11: codes[i].code = motoCode0; break;
       case 12: codes[i].code = motoCode1; break;
     }
   }
+}
+
+IrCode* ir_code_getByIndex(uint16_t codeIndex) {
+  return &codes[codeIndex];
 }
 
 IrCode* ir_code_decode(uint16_t* buffer, uint16_t bufferLen) {

@@ -14,9 +14,9 @@
 
 GPIO_InitTypeDef irTxGpioInit;
 
-volatile uint16_t* g_tx_buffer;
 volatile uint16_t g_tx_bufferIndex;
-volatile uint16_t g_tx_bufferLength;
+volatile uint16_t g_tx_repeatCount;
+volatile IrCode* g_tx_code;
 
 void _ir_tx_on();
 void _ir_tx_off();
@@ -88,15 +88,15 @@ void ir_tx_setup() {
   debug_write_line("?END ir_tx_setup");
 }
 
-void ir_tx_send(uint16_t* buffer, uint16_t bufferLength) {
+void ir_tx_send(IrCode* code) {
   g_tx_bufferIndex = 0;
-  g_tx_buffer = buffer;
-  g_tx_bufferLength = bufferLength;
+  g_tx_repeatCount = code->repeatCount;
+  g_tx_code = code;
 
-  TIM_SetAutoreload(IR_TX_DELAY_TIMER, g_tx_buffer[g_tx_bufferIndex++]);
   TIM_SetCounter(IR_TX_DELAY_TIMER, 1);
-
+  TIM_SetAutoreload(IR_TX_DELAY_TIMER, g_tx_code->code[g_tx_bufferIndex++]);
   _ir_tx_on();
+
   TIM_Cmd(IR_TX_DELAY_TIMER, ENABLE);
 }
 
@@ -108,12 +108,19 @@ void on_tim1_irq() {
       _ir_tx_off();
     }
 
-    if(g_tx_bufferIndex < g_tx_bufferLength - 1) {
+    if(g_tx_bufferIndex < g_tx_code->codeLength - 1) {
       TIM_SetCounter(IR_TX_DELAY_TIMER, 1);
-      TIM_SetAutoreload(IR_TX_DELAY_TIMER, g_tx_buffer[g_tx_bufferIndex++]);
+      TIM_SetAutoreload(IR_TX_DELAY_TIMER, g_tx_code->code[g_tx_bufferIndex++]);
     } else {
-      TIM_Cmd(IR_TX_DELAY_TIMER, DISABLE);
+      g_tx_repeatCount--;
       _ir_tx_off();
+      if(g_tx_repeatCount == 0) {
+        TIM_Cmd(IR_TX_DELAY_TIMER, DISABLE);
+      } else {
+        g_tx_bufferIndex = 0;
+        TIM_SetCounter(IR_TX_DELAY_TIMER, 1);
+        TIM_SetAutoreload(IR_TX_DELAY_TIMER, g_tx_code->gap);
+      }
     }
 
     TIM_ClearITPendingBit(IR_TX_DELAY_TIMER, TIM_IT_Update);
