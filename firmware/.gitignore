@@ -1,2 +1,3 @@
 build/
 stm32-wifi-ir.layout
+connection_info.h

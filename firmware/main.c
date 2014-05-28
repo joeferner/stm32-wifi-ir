@@ -5,6 +5,9 @@
 #include <stm32f10x_usart.h>
 #include <misc.h>
 #include <string.h>
+#include "cc3000-host-driver/socket.h"
+#include "cc3000-host-driver/netapp.h"
+#include "stm32_cc3000.h"
 #include "debug.h"
 #include "delay.h"
 #include "time.h"
@@ -13,9 +16,13 @@
 #include "ir_tx.h"
 #include "ir_rx.h"
 #include "ir_code.h"
+#include "connection_info.h"
+
+char cc3000_device_name[] = "WiFi IR";
 
 void setup();
 void loop();
+void wifi_connect();
 
 #define MAX_LINE_LENGTH 100
 #define INPUT_BUFFER_SIZE 100
@@ -45,8 +52,10 @@ void setup() {
   ir_tx_setup();
   ir_rx_setup();
 
-  debug_led_set(0);
+  cc3000_setup(0, 0);
+  wifi_connect();
 
+  debug_led_set(0);
   debug_write_line("?END setup");
 }
 
@@ -80,7 +89,8 @@ void assert_failed(uint8_t* file, uint32_t line) {
   }
 }
 
-uint16_t testcode0[] = { 2388, 541, 1232, 541, 615, 541, 1232, 540, 616, 541, 1232, 541, 616, 541, 615, 541, 1231, 540, 615, 541, 615, 541, 615, 541, 616 };
+//uint16_t testcode0[] = { 2388, 541, 1232, 541, 615, 541, 1232, 540, 616, 541, 1232, 541, 616, 541, 615, 541, 1231, 540, 615, 541, 615, 541, 615, 541, 616 };
+uint16_t testcode0[] = { 2440, 516, 1232, 541, 616, 541, 615, 542, 1231, 542, 615, 542, 614, 543, 614, 542, 1230, 543, 615, 542, 613, 543, 614, 543, 614 };
 
 void on_usart1_irq() {
   char line[MAX_LINE_LENGTH];
@@ -118,3 +128,73 @@ void on_usart1_irq() {
   }
 }
 
+void wifi_connect() {
+  uint8_t cc3000MajorFirmwareVersion, cc3000MinorFirmwareVersion;
+
+  cc3000_get_firmware_version(&cc3000MajorFirmwareVersion, &cc3000MinorFirmwareVersion);
+  debug_write("?major: 0x");
+  debug_write_u8(cc3000MajorFirmwareVersion, 16);
+  debug_write_line("");
+  debug_write("?minor: 0x");
+  debug_write_u8(cc3000MinorFirmwareVersion, 16);
+  debug_write_line("");
+  if (cc3000MajorFirmwareVersion != 0x01 || cc3000MinorFirmwareVersion != 0x18) {
+    debug_write_line("?Wrong firmware version!");
+    while (1);
+  }
+
+  cc3000_display_mac_address();
+
+  debug_write_line("?Deleting old connection profiles");
+  if (cc3000_delete_profiles() != 0) {
+    debug_write_line("?Failed!");
+    while (1);
+  }
+
+#ifdef STATIC_IP_ADDRESS
+  unsigned long aucIP = STATIC_IP_ADDRESS;
+  unsigned long aucSubnetMask = STATIC_SUBNET_MASK;
+  unsigned long aucDefaultGateway = STATIC_DEFAULT_GATEWAY;
+  unsigned long aucDNSServer = STATIC_DNS_SERVER;
+  if (netapp_dhcp(&aucIP, &aucSubnetMask, &aucDefaultGateway, &aucDNSServer) != 0) {
+    debug_write_line("?netapp_dhcp Failed!");
+    while (1);
+  }
+#else
+  unsigned long aucIP = 0;
+  unsigned long aucSubnetMask = 0;
+  unsigned long aucDefaultGateway = 0;
+  unsigned long aucDNSServer = 0;
+  if (netapp_dhcp(&aucIP, &aucSubnetMask, &aucDefaultGateway, &aucDNSServer) != 0) {
+    debug_write_line("?netapp_dhcp Failed!");
+    while (1);
+  }
+#endif
+
+  // Attempt to connect to an access point
+  char *ssid = WLAN_SSID; /* Max 32 chars */
+  debug_write("?Attempting to connect to ");
+  debug_write_line(ssid);
+
+  // NOTE: Secure connections are not available in 'Tiny' mode!
+  if (cc3000_connect_to_ap(WLAN_SSID, WLAN_PASS, WLAN_SECURITY) != 0) {
+    debug_write_line("?Connect Failed!");
+    while (1);
+  }
+
+  debug_write_line("?Connected!");
+
+#ifndef STATIC_IP_ADDRESS
+  // Wait for DHCP to complete
+  debug_write_line("?Request DHCP");
+  while (cc3000_check_dhcp() != 0) {
+    delay_ms(100);
+  }
+#endif
+
+  while (!cc3000_is_connected()) {
+    delay_ms(100);
+  }
+
+  cc3000_display_ipconfig();
+}

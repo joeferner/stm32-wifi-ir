@@ -20,9 +20,9 @@
 
 #define IR_TX_CARRIER_TIMER            TIM3
 #define IR_TX_CARRIER_TIMER_RCC        RCC_APB1Periph_TIM3
-#define IR_TX_CARRIER_TIMER_CH_Init          TIM_OC1Init
-#define IR_TX_CARRIER_TIMER_CH_PreloadConfig TIM_OC1PreloadConfig
-#define IR_TX_CARRIER_TIMER_CH_SetCompare    TIM_SetCompare1
+#define IR_TX_CARRIER_TIMER_CH_Init          TIM_OC3Init
+#define IR_TX_CARRIER_TIMER_CH_PreloadConfig TIM_OC3PreloadConfig
+#define IR_TX_CARRIER_TIMER_CH_SetCompare    TIM_SetCompare3
 #define IR_TX_CARRIER_RCC              RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO
 #define IR_TX_CARRIER_PORT             GPIOB
 #define IR_TX_CARRIER_PIN              GPIO_Pin_0
@@ -30,5 +30,24 @@
 #define IR_TX_RCC              RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO
 #define IR_TX_PORT             GPIOB
 #define IR_TX_PIN              GPIO_Pin_1
+
+// SPI1 pins: SCK (GPIOA - pin 5) and MOSI (GPIOA - pin 7)
+// SPI1 pins: MISO (GPIOA - pin 6)
+
+#define CC3000_IRQ_RCC         RCC_APB2Periph_GPIOA
+#define CC3000_IRQ_PORT        GPIOA
+#define CC3000_IRQ_PIN         GPIO_Pin_1
+#define CC3000_IRQ_EXTI_LINE   EXTI_Line1
+#define CC3000_IRQ_EXTI_PORT   GPIO_PortSourceGPIOA
+#define CC3000_IRQ_EXTI_PIN    GPIO_PinSource1
+#define CC3000_IRQ_EXTI_CH     EXTI1_IRQn
+
+#define CC3000_VBAT_EN_RCC     RCC_APB2Periph_GPIOA
+#define CC3000_VBAT_EN_PORT    GPIOA
+#define CC3000_VBAT_EN_PIN     GPIO_Pin_2
+
+#define CC3000_CS_RCC          RCC_APB2Periph_GPIOA
+#define CC3000_CS_PORT         GPIOA
+#define CC3000_CS_PIN          GPIO_Pin_3
 
 #endif // PLATFORM_CONFIG_H_INCLUDED
