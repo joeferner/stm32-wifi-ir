@@ -10,8 +10,13 @@
 
 #define IR_TX_CARRIER_FREQ       38000
 #define IR_TX_CARRIER_PWM_PERIOD         (SystemCoreClock / IR_TX_CARRIER_FREQ)
+#define IR_TX_DELAY_PRESCALER            (72 - 1)
 
 GPIO_InitTypeDef irTxGpioInit;
+
+volatile uint16_t* g_tx_buffer;
+volatile uint16_t g_tx_bufferIndex;
+volatile uint16_t g_tx_bufferLength;
 
 void _ir_tx_on();
 void _ir_tx_off();
@@ -20,6 +25,7 @@ void ir_tx_setup() {
   TIM_TimeBaseInitTypeDef timeBaseInit;
   TIM_OCInitTypeDef ocInit;
   GPIO_InitTypeDef gpioInitStructure;
+  NVIC_InitTypeDef nvicInit;
 
   debug_write_line("?BEGIN ir_tx_setup");
 
@@ -59,19 +65,59 @@ void ir_tx_setup() {
   IR_TX_CARRIER_TIMER_CH_SetCompare(IR_TX_CARRIER_TIMER, IR_TX_CARRIER_PWM_PERIOD / 2);
   TIM_Cmd(IR_TX_CARRIER_TIMER, ENABLE);
 
+  // setup delay timer
+  RCC_APB2PeriphClockCmd(IR_TX_DELAY_TIMER_RCC, ENABLE);
+
+  TIM_TimeBaseStructInit(&timeBaseInit);
+  timeBaseInit.TIM_Period = 0xffff;
+  timeBaseInit.TIM_Prescaler = IR_TX_DELAY_PRESCALER;
+  timeBaseInit.TIM_ClockDivision = 0;
+  timeBaseInit.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM_TimeBaseInit(IR_TX_DELAY_TIMER, &timeBaseInit);
+
+  nvicInit.NVIC_IRQChannel = IR_TX_DELAY_TIMER_IRQ;
+  nvicInit.NVIC_IRQChannelPreemptionPriority = 1;
+  nvicInit.NVIC_IRQChannelSubPriority = 0;
+  nvicInit.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&nvicInit);
+
+  TIM_ITConfig(IR_TX_DELAY_TIMER, TIM_IT_Update, ENABLE);
+
+  _ir_tx_off();
+
   debug_write_line("?END ir_tx_setup");
 }
 
 void ir_tx_send(uint16_t* buffer, uint16_t bufferLength) {
-  for(uint16_t i = 0; i < bufferLength; i++) {
-    if((i % 2) == 0) {
+  g_tx_bufferIndex = 0;
+  g_tx_buffer = buffer;
+  g_tx_bufferLength = bufferLength;
+
+  TIM_SetAutoreload(IR_TX_DELAY_TIMER, g_tx_buffer[g_tx_bufferIndex++]);
+  TIM_SetCounter(IR_TX_DELAY_TIMER, 1);
+
+  _ir_tx_on();
+  TIM_Cmd(IR_TX_DELAY_TIMER, ENABLE);
+}
+
+void on_tim1_irq() {
+  if (TIM_GetITStatus(IR_TX_DELAY_TIMER, TIM_IT_Update) != RESET) {
+    if((g_tx_bufferIndex % 2) == 0) {
       _ir_tx_on();
     } else {
       _ir_tx_off();
     }
-    delay_us(buffer[i]);
+
+    if(g_tx_bufferIndex < g_tx_bufferLength - 1) {
+      TIM_SetCounter(IR_TX_DELAY_TIMER, 1);
+      TIM_SetAutoreload(IR_TX_DELAY_TIMER, g_tx_buffer[g_tx_bufferIndex++]);
+    } else {
+      TIM_Cmd(IR_TX_DELAY_TIMER, DISABLE);
+      _ir_tx_off();
+    }
+
+    TIM_ClearITPendingBit(IR_TX_DELAY_TIMER, TIM_IT_Update);
   }
-  _ir_tx_off();
 }
 
 void _ir_tx_on() {

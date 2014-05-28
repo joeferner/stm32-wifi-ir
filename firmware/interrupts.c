@@ -5,6 +5,7 @@
 extern void time_SysTick_Handler();
 extern void on_usart1_irq();
 extern void on_exti0_irq();
+extern void on_tim1_irq();
 extern void on_tim2_irq();
 extern void cc3000_irq();
 
@@ -49,6 +50,10 @@ void EXTI1_IRQHandler(void) {
     cc3000_irq();
     EXTI_ClearITPendingBit(CC3000_IRQ_EXTI_LINE);
   }
+}
+
+void TIM1_UP_IRQHandler() {
+  on_tim1_irq();
 }
 
 void TIM2_IRQHandler() {

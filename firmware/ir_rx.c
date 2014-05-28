@@ -23,7 +23,7 @@ volatile uint16_t irRecvAvailable;
 
 #define TIM_PRESCALER  72
 #define TIM_PERIOD     0xfffe
-#define US_PER_TIM     ((1.0 / (SystemCoreClock / TIM_PRESCALER)) * 1000000.0)
+#define US_PER_TIM     1
 
 void ir_rx_setup() {
   GPIO_InitTypeDef gpioConfig;
@@ -75,7 +75,7 @@ void ir_rx_setup() {
   timeBaseInit.TIM_Prescaler = TIM_PRESCALER;
   timeBaseInit.TIM_ClockDivision = 0;
   timeBaseInit.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInit(TIM2, &timeBaseInit);
+  TIM_TimeBaseInit(IR_RX_TIMER, &timeBaseInit);
 
   nvicInit.NVIC_IRQChannel = TIM2_IRQn;
   nvicInit.NVIC_IRQChannelPreemptionPriority = 1;
@@ -83,9 +83,9 @@ void ir_rx_setup() {
   nvicInit.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&nvicInit);
 
-  TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
-  TIM_SetCounter(TIM2, 0);
-  TIM_Cmd(TIM2, ENABLE);
+  TIM_ITConfig(IR_RX_TIMER, TIM_IT_Update, ENABLE);
+  TIM_SetCounter(IR_RX_TIMER, 0);
+  TIM_Cmd(IR_RX_TIMER, ENABLE);
 
   debug_write_line("?END ir_rx_setup");
 }

@@ -18,6 +18,8 @@
 #define IR_RX_PORT             GPIOA
 #define IR_RX_PIN              GPIO_Pin_0
 
+#define IR_RX_TIMER            TIM2
+
 #define IR_TX_CARRIER_TIMER            TIM3
 #define IR_TX_CARRIER_TIMER_RCC        RCC_APB1Periph_TIM3
 #define IR_TX_CARRIER_TIMER_CH_Init          TIM_OC3Init
@@ -30,6 +32,10 @@
 #define IR_TX_RCC              RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO
 #define IR_TX_PORT             GPIOB
 #define IR_TX_PIN              GPIO_Pin_1
+
+#define IR_TX_DELAY_TIMER            TIM1
+#define IR_TX_DELAY_TIMER_IRQ        TIM1_UP_IRQn
+#define IR_TX_DELAY_TIMER_RCC        RCC_APB2Periph_TIM1
 
 // SPI1 pins: SCK (GPIOA - pin 5) and MOSI (GPIOA - pin 7)
 // SPI1 pins: MISO (GPIOA - pin 6)

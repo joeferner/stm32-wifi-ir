@@ -3,6 +3,7 @@
 
 #define BRAND_TIVO         0x0001
 #define BRAND_WESTINGHOUSE 0x0002
+#define BRAND_MOTOROLA     0x0003
 
 typedef struct {
   uint16_t brand;

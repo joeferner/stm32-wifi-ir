@@ -12,7 +12,8 @@
 
 int _ir_code_match(IrCode* code, uint16_t* buffer, uint16_t bufferLen);
 
-IrCode codes[20];
+#define CODE_COUNT 13
+IrCode codes[CODE_COUNT];
 
 uint16_t code0[] = { 2440, 516, 1232, 541, 616, 541, 615, 542, 1231, 542, 615, 542, 614, 543, 614, 542, 1230, 543, 615, 542, 613, 543, 614, 543, 614 };
 uint16_t code1[] = { 2440, 515, 640, 517, 615, 541, 615, 541, 616, 542, 615, 542, 615, 541, 614, 542, 1230, 542, 614, 542, 615, 542, 614, 543, 612 };
@@ -26,8 +27,12 @@ uint16_t code8[] = { 2440, 516, 1253, 520, 1231, 541, 1230, 542, 614, 543, 614, 
 uint16_t code9[] = { 2417, 538, 616, 541, 616, 541, 615, 542, 1231, 542, 615, 542, 614, 542, 614, 542, 1231, 542, 614, 542, 615, 542, 614, 543, 614 };
 uint16_t codePwr[] = { 2388, 541, 1232, 541, 615, 541, 1232, 540, 616, 541, 1232, 541, 616, 541, 615, 541, 1231, 540, 615, 541, 615, 541, 615, 541, 616 };
 
+uint16_t motoCode0[] = { 8912,4406,509,2188,510,2188,509,2188,510,2187,510,2188,510,2187,510,2188,510,2188,511,2187,510,2187,511,2188,510,2187,511,2187,510,2187,511,2187,510,2187,511 };
+uint16_t motoCode1[] = { 8892,4428,510,4411,511,2187,510,2187,509,2187,510,2187,510,2188,510,2188,511,2188,510,2187,511,2187,510,2187,511,2186,511,4411,511,4410,510,4411,510,4411,511 };
+
 void ir_code_setup() {
-  for(int i=0; i<10; i++) {
+  int i = 0;
+  for(; i<11; i++) {
     codes[i].brand = BRAND_WESTINGHOUSE;
     codes[i].key = i;
     codes[i].codeLength = 25;
@@ -43,6 +48,16 @@ void ir_code_setup() {
       case 8: codes[i].code = code8; break;
       case 9: codes[i].code = code9; break;
       case 10: codes[i].code = codePwr; break;
+    }
+  }
+
+  for(; i<CODE_COUNT; i++) {
+    codes[i].brand = BRAND_MOTOROLA;
+    codes[i].key = i - 11;
+    codes[i].codeLength = 35;
+    switch(i) {
+      case 11: codes[i].code = motoCode0; break;
+      case 12: codes[i].code = motoCode1; break;
     }
   }
 }
@@ -63,7 +78,7 @@ IrCode* ir_code_decode(uint16_t* buffer, uint16_t bufferLen) {
 
   int bestMatch = -1;
   int bestValue = 0;
-  for(int i=0; i<10; i++) {
+  for(int i=0; i<CODE_COUNT; i++) {
     int matchValue = _ir_code_match(&codes[i], buffer, bufferLen);
     if(matchValue != NO_MATCH && matchValue > bestValue) {
       bestMatch = i;

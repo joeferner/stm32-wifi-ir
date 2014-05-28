@@ -44,6 +44,7 @@ void setup() {
 
   debug_setup();
   debug_led_set(1);
+  debug_write_line("?BEGIN setup");
 
   ring_buffer_u8_init(&g_usartInputRingBuffer, g_usartInputBuffer, INPUT_BUFFER_SIZE);
 
@@ -52,8 +53,8 @@ void setup() {
   ir_tx_setup();
   ir_rx_setup();
 
-  cc3000_setup(0, 0);
-  wifi_connect();
+  //cc3000_setup(0, 0);
+  //wifi_connect();
 
   debug_led_set(0);
   debug_write_line("?END setup");
@@ -90,7 +91,7 @@ void assert_failed(uint8_t* file, uint32_t line) {
 }
 
 //uint16_t testcode0[] = { 2388, 541, 1232, 541, 615, 541, 1232, 540, 616, 541, 1232, 541, 616, 541, 615, 541, 1231, 540, 615, 541, 615, 541, 615, 541, 616 };
-uint16_t testcode0[] = { 2440, 516, 1232, 541, 616, 541, 615, 542, 1231, 542, 615, 542, 614, 543, 614, 542, 1230, 543, 615, 542, 613, 543, 614, 543, 614 };
+uint16_t testcode0[] = { 9028,4450,555,4433,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,2181,555,4433,555,4433,555,4433,555,4433,556 };
 
 void on_usart1_irq() {
   char line[MAX_LINE_LENGTH];
@@ -115,11 +116,8 @@ void on_usart1_irq() {
         debug_write_line("!code.set text,'xxxxxxxxxxxxxxxxxxxx'");
       } else if(strncmp(line, "!TX", 3) == 0) {
         debug_write_line("+OK");
-        ir_tx_send(testcode0, 25);
-        delay_us(5000);
-        ir_tx_send(testcode0, 25);
-        delay_us(5000);
-        ir_tx_send(testcode0, 25);
+        ir_tx_send(testcode0, 35);
+        delay_ms(160);
       } else {
         debug_write("?Unknown command: ");
         debug_write_line(line);
