@@ -33,17 +33,86 @@
 		</Compiler>
 		<Unit filename="CMakeLists.txt" />
 		<Unit filename="build.sh" />
+		<Unit filename="cc3000-host-driver/cc3000_common.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cc3000-host-driver/cc3000_common.h" />
+		<Unit filename="cc3000-host-driver/debug.h" />
+		<Unit filename="cc3000-host-driver/evnt_handler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cc3000-host-driver/evnt_handler.h" />
+		<Unit filename="cc3000-host-driver/hci.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cc3000-host-driver/hci.h" />
+		<Unit filename="cc3000-host-driver/host_driver_version.h" />
+		<Unit filename="cc3000-host-driver/netapp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cc3000-host-driver/netapp.h" />
+		<Unit filename="cc3000-host-driver/nvmem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cc3000-host-driver/nvmem.h" />
+		<Unit filename="cc3000-host-driver/security.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cc3000-host-driver/security.h" />
+		<Unit filename="cc3000-host-driver/socket.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cc3000-host-driver/socket.h" />
+		<Unit filename="cc3000-host-driver/wlan.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cc3000-host-driver/wlan.h" />
+		<Unit filename="ccspi.h" />
+		<Unit filename="connection_info.h" />
+		<Unit filename="debug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="debug.h" />
+		<Unit filename="delay.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="delay.h" />
 		<Unit filename="interrupts.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="ir_code.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ir_code.h" />
+		<Unit filename="ir_rx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ir_rx.h" />
+		<Unit filename="ir_tx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ir_tx.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="platform_config.h" />
+		<Unit filename="ring_buffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ring_buffer.h" />
 		<Unit filename="run-cmake.sh" />
+		<Unit filename="stm32_cc3000.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="stm32_cc3000.h" />
 		<Unit filename="stm32f10x_conf.h" />
 		<Unit filename="system_stm32f10x.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="time.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="time.h" />
 		<Unit filename="upload.sh" />
 		<Extensions>
 			<code_completion />
