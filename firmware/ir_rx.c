@@ -21,7 +21,7 @@ volatile uint16_t irRecvReadIndex;
 volatile uint16_t irRecvWriteIndex;
 volatile uint16_t irRecvAvailable;
 
-#define TIM_PRESCALER  72
+#define TIM_PRESCALER  (72 * 2)
 #define TIM_PERIOD     0xfffe
 #define US_PER_TIM     1
 
@@ -114,7 +114,7 @@ void on_exti0_irq() {
     if(rx->bufferLength < 0) {
       rx->bufferLength++;
     } else {
-      rx->buffer[rx->bufferLength] = TIM_GetCounter(TIM2);
+      rx->buffer[rx->bufferLength] = TIM_GetCounter(TIM2) * 2;
       if(rx->buffer[rx->bufferLength] > 10000 || rx->bufferLength == (IR_RX_CAPTURE_BUFFER_MAX_LEN - 1)) {
         rx->bufferLength++;
         _ir_rx_process_buffer();

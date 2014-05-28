@@ -4,7 +4,7 @@
 #include "ring_buffer.h"
 #include "ir_code.h"
 
-#define IR_RX_CAPTURE_BUFFER_MAX_LEN 40
+#define IR_RX_CAPTURE_BUFFER_MAX_LEN  100
 
 typedef struct {
   int16_t bufferLength;

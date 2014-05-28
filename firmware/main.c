@@ -116,7 +116,7 @@ void on_usart1_irq() {
         debug_write_line("!code.set text,'xxxxxxxxxxxxxxxxxxxx'");
       } else if(strncmp(line, "!TX", 3) == 0) {
         debug_write_line("+OK");
-        IrCode* code = ir_code_getByIndex(10);
+        IrCode* code = ir_code_getByIndex(0);
         ir_tx_send(code);
       } else {
         debug_write("?Unknown command: ");
